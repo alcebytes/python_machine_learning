@@ -1,4 +1,9 @@
 import numpy as np 
-a = [[1, 12], [3,2321], [412,12321]]
+import pandas as pd
+'''
+data_set = pd.read_csv('classific_naive_bayes.csv')
 
-print(np.argsort(a, axis = 0))
+
+for index, linha in data_set.iterrows():
+    print(linha.values)
+'''
