@@ -3,9 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import math
 import random as rd
-
-def embaralhar(data_set):
-    return data_set.sample(frac=1, random_state=rd.randint(0,100)).reset_index()
+import time
 
 def selecionar_dados_treino(data_set, qtd_treino):
      if qtd_treino > 1:
@@ -47,21 +45,24 @@ def calcular_probabildiade(data_set, valor_classe, nome_classe, evento):
 
 data_set = pd.read_csv('classific_naive_bayes.csv')
 INCREMETO_TREINO_TESTE = 0.1
-
+QUANTIDADE_RODADAS = 30
 percent_treino_inicial = 0.9
 percent_teste_inicial = 0.1
 percent_treino = percent_treino_inicial
 percent_teste = percent_teste_inicial
 
 erros_totais = []
+inicio = time.time()
 # só irá parar quando a quantidade de testes for igual a quantidade de treino inicial
 while percent_teste != percent_treino_inicial:
-
+        
     dados_treino = { "tam_treino": percent_treino * len(data_set), "tam_teste": percent_teste * len(data_set) }
 
     erros_por_rodada = []
 
-    for i in range(0, 10):                
+    print('Inicio das ' + str(QUANTIDADE_RODADAS) + ' rodadas para o dataset com proporção: ' + str(percent_treino * len(data_set)) + '(treino)/(teste)' + str(percent_teste * len(data_set)))
+
+    for i in range(0, QUANTIDADE_RODADAS):                
         data_set_treino = data_set.sample(frac=percent_treino, random_state=i*rd.randint(0,100)).reset_index(drop=True)
         data_set_teste = data_set.drop(data_set_treino.index)
         # pega linha por linha do teste para selecionar a melhor classe e verifica se acertou ou n
@@ -75,12 +76,21 @@ while percent_teste != percent_treino_inicial:
                 num_erros += 1
         erros_por_rodada.append(num_erros)
 
-    dados_treino["erro_media"] = np.mean(erros_por_rodada)
+    dados_treino["erro_media"] = round(np.mean(erros_por_rodada), 3)
     dados_treino["erro_max"] = np.max(erros_por_rodada)
     dados_treino["erro_min"] = np.min(erros_por_rodada)
     
     erros_totais.append(dados_treino)
 
-    percent_teste += INCREMETO_TREINO_TESTE 
-    percent_treino -= INCREMETO_TREINO_TESTE   
-    
+    percent_teste += INCREMETO_TREINO_TESTE
+    percent_teste = round(percent_teste, 2)
+    percent_treino -= INCREMETO_TREINO_TESTE
+    percent_treino = round(percent_treino, 2)   
+
+fim = time.time()
+
+#dura em torno de 15 minutos
+print("Tempo de execução: " + str(fim - inicio))
+print(erros_totais)
+
+
