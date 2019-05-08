@@ -87,7 +87,7 @@ while percent_teste != percent_treino_inicial:
     percent_treino -= INCREMETO_TREINO_TESTE
     percent_treino = round(percent_treino, 2)   
 
-fim = time.time()
+fim = time.time()ls
 
 #dura em torno de 15 minutos
 print("Tempo de execução: " + str(fim - inicio))
