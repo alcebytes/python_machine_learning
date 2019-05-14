@@ -81,7 +81,6 @@ while percent_teste <= percent_treino_inicial:
 
 fim = time.time()
 
-#dura em torno de 15 minutos
 tempo_execucao_minutos = round(((fim - inicio) / 60), 1)
 print("Tempo de execução: " + str(tempo_execucao_minutos) + " minutos")
 print('Abaixo o JSON que contempla as proporções e média de erros para cada.')
