@@ -1,4 +1,7 @@
-tuple_t = list([1,2,3])
-print(tuple_t)
-tuple_t.pop()
-print(tuple_t)
+import pandas as pd
+
+
+t = pd.DataFrame([1,2,3])
+
+for i,a in t.iterrows():
+    print(i)
