@@ -35,7 +35,7 @@ def selecionar_centroide_mais_proximo(linha, centroides):
     menor_distancia_index = distancias_do_centroide.index(min(distancias_do_centroide))
     # mais 1 pois o cluster não pode ser zero
     cluster = (menor_distancia_index) + 1
-    return centroides.loc[menor_distancia_index],cluster
+    return centroides.loc[menor_distancia_index],cluster, menor_distancia_index
 
 def atualizar_centroides(rodadas, diferentes_clusters):
     novos_centroides = []
@@ -71,35 +71,48 @@ def verifica_nova_rodada_mudou(numero_rodada_corrente, execucoes):
         return True      
   return False  
     
+def obter_media_distancias(numero_rodada, execucoes, tam_data_set):
+    execucoes_filtradas = [execucao for execucao in execucoes if execucao["rodada"] == numero_rodada]
+    sum_distancias = 0
+    for execu in execucoes_filtradas:
+        sum_distancias += execu["distancia_do_centroide"]
+    return sum_distancias/tam_data_set
     
+    
+
 # rodadas onde é guardado o centroide, em qual rodada está e a classe 
 execucoes = []
 
-agrupamentos = pd.read_csv('agrupamento.dat', sep='\s+', header=None, skiprows=1)
-
-centroides = pd.read_csv('centroides.dat', sep='\s+', header=None, skiprows=1)
-
-data_set = pd.concat([centroides,agrupamentos])
-
-clusters = np.array(range(1, len(centroides) + 1))
-
+data_set = pd.read_csv('agrupamento.dat', sep='\s+', header=None, skiprows=1)
+todos_centroides = pd.read_csv('centroides.dat', sep='\s+', header=None, skiprows=1)
 numero_rodada_corrente = 1
+eibow = []
 
-while True:
-    for i,row in data_set.iterrows():            
-        print('executando rodada...' + str(numero_rodada_corrente))
-        centroide, cluster = selecionar_centroide_mais_proximo(row, centroides)
-        execucoes.append({
-            "coordenada" : row,
-            "rodada": numero_rodada_corrente, 
-            "cluster": cluster
-        })
-    centroides = atualizar_centroides(execucoes, clusters)    
-    # se não mudar mais nada, é pq deve parar o loop pois não há mais o que fazer..
-    if verifica_nova_rodada_mudou(numero_rodada_corrente, execucoes) == False:
-        break
-    else:
-        numero_rodada_corrente += 1
+#começa com 2
+centroides_iniciais = todos_centroides.loc[0:2]
+for indice_centroide in range(len(centroides_iniciais), len(todos_centroides)):    
+    centroides = pd.concat([centroides_iniciais, todos_centroides[indice_centroide]])
+    clusters = np.array(range(1, len(centroides)))
+    while True:
+        for i,row in data_set.iterrows():            
+            print('executando rodada...' + str(numero_rodada_corrente))
+            centroide, cluster, distancia = selecionar_centroide_mais_proximo(row, centroides)
+            execucoes.append({
+                "coordenada" : row,
+                "distancia_do_centroide": distancia 
+                "rodada": numero_rodada_corrente, 
+                "cluster": cluster
+            })
+        centroides = atualizar_centroides(execucoes, clusters)    
+        # se não mudar mais nada, é pq deve parar o loop pois não há mais o que fazer..
+        if verifica_nova_rodada_mudou(numero_rodada_corrente, execucoes) == False:
+            eibow.append({
+                "media_distancias": obter_media_distancias(numero_rodada_corrente, execucoes, len(data_set)),               
+                "quantidade_centroides": len(centroides)
+            })
+            break
+        else:
+            numero_rodada_corrente += 1
 
 
 #plot dos gráficos    
