@@ -115,7 +115,6 @@ for indice_centroide in range(len(centroides_iniciais) - 1, len(todos_centroides
                 "cluster": cluster
             })
         centroides = atualizar_centroides(execucoes, clusters, centroides)    
-        print("finalizando rodada " + str(numero_rodada_corrente) + "..")
         # se não mudar mais nada, é pq deve parar o loop pois não há mais o que fazer..
         if verifica_nova_rodada_mudou(numero_rodada_corrente, execucoes) == False:
             print("execução com " + str(len(centroides)) + " centroides estabilizado na rodada " + str(numero_rodada_corrente) + "!")
@@ -125,10 +124,16 @@ for indice_centroide in range(len(centroides_iniciais) - 1, len(todos_centroides
             })
             execucoes = []
             numero_rodada_corrente = 1
-            print(eibow)
+            #print(eibow)
             break
         else:
             numero_rodada_corrente += 1
 
+media,qtd_centroides = [ dados["media_distancias"], dados["quantidade_centroides"] for dados in eibow]
+plt.scatter(media, qtd_centroides)
+plt.figure(1, figsize=(15,5))
+plt.xlabel('Variância')
+plt.ylabel('Quantidade de centroides')
+plt.show()
 print(eibow)
 #plot dos gráficos    
