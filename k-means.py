@@ -129,7 +129,8 @@ for indice_centroide in range(len(centroides_iniciais) - 1, len(todos_centroides
         else:
             numero_rodada_corrente += 1
 
-media,qtd_centroides = [ dados["media_distancias"], dados["quantidade_centroides"] for dados in eibow]
+media = [ dados["media_distancias"] for dados in eibow]
+qtd_centroides = [dados["quantidade_centroides"] for dados in eibow]
 plt.scatter(media, qtd_centroides)
 plt.figure(1, figsize=(15,5))
 plt.xlabel('Variância')
