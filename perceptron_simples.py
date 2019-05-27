@@ -11,17 +11,19 @@ PESO_INICIAL = 1
 BIAS = -1
 Q = 6
 
-def transformar_classes_em_bits(data_setl):
-    diferentes_saidas = data_set["Target"].unique()
+def transformar_classes_em_bits(data_set):
+    # as classes serão sempre a última coluna
+    diferentes_saidas = data_set[data_set.columns[-1]].unique()
     mapa_classes_em_bits = {}
     for saida in diferentes_saidas:
         bits = ''
-        for i in range(0, max(diferentes_saidas)):
+        for i in range(1, max(diferentes_saidas) + 1):
             if i == saida:
                 bits += '1'
             else:
                 bits += '0'
-        mapa_classes_em_bits[saida] = bits
+            if '1' in bits:
+                mapa_classes_em_bits[saida] = bits
     return mapa_classes_em_bits        
 
 # def transformar_saida_em_bit(data_set, decimal):
@@ -37,7 +39,7 @@ def transformar_classes_em_bits(data_setl):
 def funcao_ativacao(resultado_da_formula):    
     if resultado_da_formula <= 0:
         return 0
-    elif:
+    else:
         return 1        
 
 # entrada -> linha do data set
@@ -52,27 +54,25 @@ def neuronio(entradas, pesos):
 def atualizar_peso(pesos, entradas, erro):
     novos_pesos = []
     for index, peso in enumerate(pesos):
-        novos_pesos.append(peso + erro * entradas[index])
+        # aplicação da formula w(t+1) = w(t) + n * e(t) * x(t)
+        novos_pesos.append((peso + CONS_APRENDIZADO) * (erro * entradas[index]))
     return novos_pesos
 
-# SE ERRO FOR NEGATIVO, O PESO EU INCREMENTO, SE FOR POSITIVO DECREMENTO
-pesos = []
 json_classes_em_bit = transformar_classes_em_bits(data_set)
+qtd_entradas = len(data_set.iloc[0])
+pesos = [1 for i in range(0,qtd_entradas)]
 
-def treinar(data_set_treino):
-    for i in len(data_set_treino.iloc[0] - 1):
-        pesos.append(PESO_INICIAL)
-    pesos = [1 for i in len(entradas)]
+def treinar(data_set_treino):    
     for i,linha in data_set_treino.iterrows():                        
-        # o último valor da linha é a saida desejada
-        saida_desejada = entradas.pop(-1)
+        # o último valor da linha é a saida desejada    
+        saida_desejada = linha.pop(-1)
         saida_desejada_em_bits = json_classes_em_bit[saida_desejada]    
         neuronios = {}
         for indice_saida in range(Q):
             saida_neuronio = str(neuronio(linha, pesos))
             neuronios.append({
                 'neuronio' : indice_saida,
-                'saida': saida_neuronio
+                'saida': saida_neuronio,
                 'entrada' : linha,
                 'pesos': pesos
             })
@@ -83,13 +83,13 @@ def treinar(data_set_treino):
                 if bit_desejado != bit_saida_resultado:
                     erro = bit_desejado - bit_saida_resultado
                     pesos = neuronio["pesos"]
-                    pesos = atualizar_pesos(pesos, linha, erro)
+                    pesos = atualizar_pesos(pesos, erro, linha)
     return neuronios
 
 def testar(data_set_teste, neuronios):
     qtd_erros = 0
     for i,linha in data_set_teste.iterrows():                                
-        saida_desejada = entradas.pop(-1)
+        saida_desejada = linhas.pop(-1)
         saida_desejada_em_bits = transformar_saida_em_bit(saida_desejada)            
         for indice_saida in range(QTD_CLASSES):
             saida_neuronio = str(neuronio(linha, peso))
