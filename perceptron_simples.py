@@ -1,3 +1,4 @@
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -5,7 +6,8 @@ import math
 import random as rd
 import time
 
-data_set = pd.read_csv('dermatologia.csv')
+#data_set = pd.read_csv('dermatologia.csv')
+data_set = pd.read_csv('dermatology.dat', sep='\s+', header=None, skiprows=1)
 CONS_APRENDIZADO = 0.05
 PESO_INICIAL = 1
 BIAS = -1
@@ -26,76 +28,65 @@ def transformar_classes_em_bits(data_set):
                 mapa_classes_em_bits[saida] = bits
     return mapa_classes_em_bits        
 
-# def transformar_saida_em_bit(data_set, decimal):
-#     diferentes_saidas = data_set["Target"].unique()
-#     bits = ''
-#     for i in range(0, max(saidas_decimal)):
-#         if i == saidas_decimal[i]:
-#             bits += '1'
-#         else:
-#             bits += '0'
-#     return bits        
-
 def funcao_ativacao(resultado_da_formula):    
     if resultado_da_formula <= 0:
         return 0
     else:
         return 1        
 
-# entrada -> linha do data set
-def neuronio(entradas, pesos):
+def calcular_saida_neuronio(entradas, pesos):
     # aplica a formula
     resultado = 0
     resultado = BIAS * pesos[0]
-    for index, valor in enumerate(linha):
-        resultado += valor * peso[index]    
+    for index, valor in enumerate(entradas):
+        resultado += valor * pesos[index]    
     return funcao_ativacao(resultado)         
 
-def atualizar_peso(pesos, entradas, erro):
+def atualizar_pesos(pesos, entradas, erro):
     novos_pesos = []
     for index, peso in enumerate(pesos):
-        # aplicação da formula w(t+1) = w(t) + n * e(t) * x(t)
-        novos_pesos.append((peso + CONS_APRENDIZADO) * (erro * entradas[index]))
+        # aplicação da formula w(t+1) = w(t) + n * e(t) * x(t)                
+        novos_pesos.append(peso + CONS_APRENDIZADO * erro * entradas[index])
     return novos_pesos
 
 json_classes_em_bit = transformar_classes_em_bits(data_set)
 qtd_entradas = len(data_set.iloc[0])
-pesos = [1 for i in range(0,qtd_entradas)]
 
-def treinar(data_set_treino):    
-    for i,linha in data_set_treino.iterrows():                        
-        # o último valor da linha é a saida desejada    
-        saida_desejada = linha.pop(-1)
+def treinar(data_set_treino):  
+    pesos = [1 for i in range(0,qtd_entradas - 1)]
+    for i,linha in data_set_treino.iterrows():          
+        # o último valor da linha é a saida desejada   
+        saida_desejada = linha.pop(len(linha) - 1)       
         saida_desejada_em_bits = json_classes_em_bit[saida_desejada]    
-        neuronios = {}
+        neuronios = []
         for indice_saida in range(Q):
-            saida_neuronio = str(neuronio(linha, pesos))
+            saida_neuronio = calcular_saida_neuronio(linha, pesos)
             neuronios.append({
                 'neuronio' : indice_saida,
                 'saida': saida_neuronio,
                 'entrada' : linha,
                 'pesos': pesos
             })
-            # esse laço é para saber qual neurônio mudou
-            for i, bit in enumerate(saida_desejada_em_bits):
-                neuronio = neuronios.get(i)
-                bit_saida_resultado = neuronio["saida"]
-                if bit_desejado != bit_saida_resultado:
-                    erro = bit_desejado - bit_saida_resultado
-                    pesos = neuronio["pesos"]
-                    pesos = atualizar_pesos(pesos, erro, linha)
+            # esse laço é para saber qual neurônio errou (mudou)
+        for i, bit_desejado in enumerate(saida_desejada_em_bits):                            
+            neuronio = neuronios[i]                
+            bit_saida_resultado = neuronio["saida"]            
+            if int(bit_desejado) != int(bit_saida_resultado):                
+                erro = int(bit_desejado) - int(bit_saida_resultado)
+                pesos = neuronio["pesos"]
+                pesos = atualizar_pesos(pesos, linha, erro)
     return neuronios
 
 def testar(data_set_teste, neuronios):
     qtd_erros = 0
     for i,linha in data_set_teste.iterrows():                                
-        saida_desejada = linhas.pop(-1)
-        saida_desejada_em_bits = transformar_saida_em_bit(saida_desejada)            
-        for indice_saida in range(QTD_CLASSES):
-            saida_neuronio = str(neuronio(linha, peso))
+        saida_desejada = linha.pop(len(linha) - 1)
+        saida_desejada_em_bits = json_classes_em_bit[saida_desejada]            
+        for indice_saida in range(Q):
+            saida_neuronio = calcular_saida_neuronio(linha, neuronios[indice_saida]["pesos"])
             for i, bit in enumerate(saida_desejada_em_bits):
-                bit_saida_resultado = neuronios.get(i)["saida"]
-                if bit != bit_saida_resultado:
+                bit_saida_resultado = saida_neuronio
+                if int(bit) != int(bit_saida_resultado):                
                     qtd_erros += 1
     return qtd_erros
             
@@ -111,7 +102,7 @@ inicio = time.time()
 # só irá parar quando a quantidade de testes for igual a quantidade de treino inicial
 while percent_teste <= percent_treino_inicial:
         
-    dados_treino = { "tam_treino": percent_treino * len(data_set), "tam_teste": percent_teste * len(data_set) }
+    dados_treino = { "tam_treino": str(percent_treino * 100) + "%", "tam_teste": str(percent_teste * 100) + "%" }
 
     erros_por_rodada = []
 
@@ -120,7 +111,7 @@ while percent_teste <= percent_treino_inicial:
     for i in range(0, QUANTIDADE_RODADAS):                
 
         data_set_treino = data_set.sample(frac=percent_treino, random_state=i*rd.randint(0,100)).reset_index(drop=True)
-        
+
         data_set_teste = data_set.drop(data_set_treino.index)
         # pega linha por linha do teste para selecionar a melhor classe e verifica se acertou ou n
         num_erros = 0
@@ -145,25 +136,14 @@ while percent_teste <= percent_treino_inicial:
 fim = time.time()
 
 
+tamanho_treino = [ dados["tam_treino"] for dados in reversed(erros_totais)]
+media_erros =  [ dados["erro_media"] for dados in reversed(erros_totais)]
 
-            
-    
-# for i,linha in data_set.iterrows():                        
-#     resultado = 0
-#     classe = linha.pop(-1)
-#     resultado = BIAS * linha.iloc[0]
-#     del linha[0]
-#     for valor in linha:
-#         resultado += valor * peso
-#     resultado += resultado * CONS_APRENDIZADO
-#     erro = classe - resultado
-#     if abs(erro) > TAXA_ERRO and erro < 0:
-#         peso += INCREMENTO_DECREMENTO_PESO    
-#     elif abs(erro) > TAXA_ERRO and erro > 0:
-#         peso -= INCREMENTO_DECREMENTO_PESO    
-#     taxas_erros.append(erro)
-    
+print('Proporção de treinamento: ' + str(tamanho_treino))
+print('Média de erros para os treinos: ' + str(media_erros))
 
-# definir um valor para multiplicar por cada 
-print(data_set)
-
+plt.scatter([ dados["tam_treino"] for dados in reversed(erros_totais)], media_erros)
+plt.figure(1, figsize=(15,5))
+plt.xlabel('Treino')
+plt.ylabel('Média de erros')
+plt.show()
